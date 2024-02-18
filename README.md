@@ -6,11 +6,11 @@ Projem:
     -Temizle Butonu- Tk arayüzünde yazılan kitap ekleme  bilgileri kolayca temizleyen bir programda ekleyerek kullanım kolaylığı sağlanmıştır.
   2)Kitap Sil
     Kullanıcılar, kütüphaneden belirli bir kitabı silme yeteneğine sahiptirler. Silinecek kitabın başlığını girerek, bu işlevi gerçekleştirebilirler. Kitap silme işlevi, kitap_sil işleviyle sağlanmıştır.
-    Eğer kütüphanede bir kitap yoksa kayıltı kitap yok ya da girilen kitap adı yanlışsa  böyle bir kayıt bulunamadı mesajları kullanıcıya verilmiştir.
+    Eğer kütüphanede bir kitap yoksa kayıtlı kitap yok ya da girilen kitap adı yanlışsa  böyle bir kayıt bulunamadı mesajları kullanıcıya verilmiştir.
   3)Kitap Listele
     Kullanıcılar, kütüphanede bulunan kitapların listesini görüntüleyebilirler. Bu özellik, kitapları_listele işleviyle sağlanmıştır.
   4)Çıkış
-kısayollarından oluşmaktadır.
+-Kısayollarından oluşmaktadır.
   
   
   
