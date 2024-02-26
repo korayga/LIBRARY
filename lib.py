@@ -47,7 +47,7 @@ class Library:
         with open(self.dosya_adi, "r") as dosya:
             kitaplar = dosya.readlines()
         
-        # Aynı başlığa sahip farklı yazarlara sahip kitapları kontrol et
+       
         ayni_baslikli_yazarlar = []
         for kitap in kitaplar:
             kitap_bilgisi = kitap.strip().split(',')
