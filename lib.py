@@ -1,24 +1,22 @@
-from tkinter import * 
+from tkinter import *
+from tkinter import simpledialog
+from tkinter.messagebox import showinfo, showerror
 
 class Library:
     def __init__(self):
         self.dosya_adi = "books.txt"
-        self.dosya = open(self.dosya_adi, "a+")
-
-    def __del__(self):
-        self.dosya.close()
 
     def kitapları_listele(self):
-        self.dosya.seek(0)
-        kitaplar = self.dosya.readlines()
-        if not kitaplar:
-            return "Kütüphanede kayıtlı kitap yok."
-        else:
-            kitap_bilgileri = ""
-            for kitap in kitaplar:
-                kitap_bilgisi = kitap.strip().split(',')
-                kitap_bilgileri += f"Başlık: {kitap_bilgisi[0]}\nYazar: {kitap_bilgisi[1]}\n\n"
-            return kitap_bilgileri
+        with open(self.dosya_adi, "r") as dosya:
+            kitaplar = dosya.readlines()
+            if not kitaplar:
+                return "Kütüphanede kayıtlı kitap yok."
+            else:
+                kitap_bilgileri = ""
+                for kitap in kitaplar:
+                    kitap_bilgisi = kitap.strip().split(',')
+                    kitap_bilgileri += f"Başlık: {kitap_bilgisi[0]}\nYazar: {kitap_bilgisi[1]}\n\n"
+                return kitap_bilgileri
 
     def kitap_ekle(self, baslik, yazar, yayin_tarihi, sayfa_sayisi):
         if not all([baslik, yazar, yayin_tarihi, sayfa_sayisi]):
@@ -32,27 +30,48 @@ class Library:
         except ValueError:
             return "Sayfa sayısı hatalı bu alan sayı olmalıdır."
         
-        kitap_bilgisi = f"{baslik},{yazar},{yayin_tarihi},{sayfa_sayisi}\n"
-        self.dosya.write(kitap_bilgisi)
-        return "Kitap başarıyla eklendi."
+        
+        with open(self.dosya_adi, "r") as dosya:
+            kitaplar = dosya.readlines()
+            for kitap in kitaplar:
+                kitap_bilgisi = kitap.strip().split(',')
+                if kitap_bilgisi[0] == baslik and kitap_bilgisi[1] == yazar:
+                    return "Bu kitap zaten kütüphanede mevcut."
+        
+        
+        with open(self.dosya_adi, "a+") as dosya:
+            dosya.write(f"{baslik},{yazar},{yayin_tarihi},{sayfa_sayisi}\n")
+        return "Başarıyla eklendi."
 
     def kitap_sil(self, baslik):
-        self.dosya.seek(0)  
-        kitaplar = self.dosya.readlines()
+        with open(self.dosya_adi, "r") as dosya:
+            kitaplar = dosya.readlines()
         
-        if not kitaplar:  
-            return "Kütüphanede kitap yok."
-
-        guncel = [kitap for kitap in kitaplar if not kitap.startswith(baslik)]
+        # Aynı başlığa sahip farklı yazarlara sahip kitapları kontrol et
+        ayni_baslikli_yazarlar = []
+        for kitap in kitaplar:
+            kitap_bilgisi = kitap.strip().split(',')
+            if kitap_bilgisi[0] == baslik:
+                if kitap_bilgisi[1] not in ayni_baslikli_yazarlar:
+                    ayni_baslikli_yazarlar.append(kitap_bilgisi[1])
+        
+        if len(ayni_baslikli_yazarlar) > 1:
+            soru = f"{baslik} isimli kitabın birden fazla yazarı var: {', '.join(ayni_baslikli_yazarlar)}. Hangi yazarı silmek istiyorsunuz?"
+            secilen_yazar = simpledialog.askstring("Yazar Seçimi", soru)
+            if secilen_yazar not in ayni_baslikli_yazarlar:
+                return "Geçersiz yazar seçimi."
+            
+            guncel = [kitap for kitap in kitaplar if kitap.strip().split(',')[0] != baslik or kitap.strip().split(',')[1] != secilen_yazar]
+        else:
+            guncel = [kitap for kitap in kitaplar if kitap.strip().split(',')[0] != baslik]
+        
+        with open(self.dosya_adi, "w") as dosya:
+            dosya.writelines(guncel)
+        
         if len(guncel) == len(kitaplar):
             return "Kitap bulunamadı."
         else:
-            self.dosya.seek(0)
-            self.dosya.truncate()
-            self.dosya.writelines(guncel)
             return "Kitap başarıyla silindi."
-
-
 
     def temizle(self):
         baslik_entry.delete(0, END)
@@ -60,7 +79,6 @@ class Library:
         yayin_tarihi_entry.delete(0, END)
         sayfa_sayisi_entry.delete(0, END)
 
-        
 kütüphane = Library() 
 
 root = Tk()
@@ -78,26 +96,28 @@ def kitap_ekle():
     yayin_tarihi = yayin_tarihi_entry.get()
     sayfa_sayisi = sayfa_sayisi_entry.get()
     sonuç = kütüphane.kitap_ekle(baslik, yazar, yayin_tarihi, sayfa_sayisi)
-    sonuç_label.config(text=sonuç)
-    
+    if "Başarıyla" in sonuç:
+        showinfo("Başarılı", sonuç, icon="info")
+    else:
+        showerror("Hata", sonuç)
 
 def kitap_sil():
     baslik = sil_entry.get()
     if not baslik:  
-        sonuç_label.config(text="Silinecek kitabın adını girin.")
+        showerror("Hata", "Silinecek kitabın adını girin.")
     else:
         sonuç = kütüphane.kitap_sil(baslik)
-        sonuç_label.config(text=sonuç)
-
-    
+        if "Başarıyla" in sonuç:
+            showinfo("Başarılı", sonuç, icon="info")
+        else:
+            showerror("Hata", sonuç)
+        kitapları_listele()  
 
 def temizle():
     kütüphane.temizle()
 
-#------------------------------------------------------------------------------------------------------#
-        
 # tk arayüz stil kod alanı 
-resim=PhotoImage(file="library.png")
+resim = PhotoImage(file="library.png")
 
 üst_bosluk = Label(root, image=resim)
 üst_bosluk.grid(row=0, columnspan=4, padx=10)
@@ -128,7 +148,6 @@ ekle_button.grid(row=5, column=0,  padx=10, pady=10, sticky="WE")
 temizle_button = Button(root, text="Temizle",command=temizle, padx=10)
 temizle_button.grid(row=5, column=1, padx=10, pady=10, sticky="WE")
 
-
 sil_label = Label(root, text="Silinecek Kitap Adı:")
 sil_label.grid(row=1, column=2, padx=10, pady=10)
 sil_entry = Entry(root)
@@ -136,7 +155,6 @@ sil_entry.grid(row=1, column=3, padx=10, pady=10)
 
 sil_button = Button(root, text="Kitap Sil", command=kitap_sil, padx=10)
 sil_button.grid(row=2, column=3,columnspan=1,  padx=10, pady=10, sticky="WE")
-
 
 liste_button = Button(root, text="Kitapları Listele", command=kitapları_listele, padx=10)
 liste_button.grid(row=8, column=0, columnspan=4, padx=10, pady=10, sticky="WE")
@@ -154,8 +172,6 @@ kitaplar_text.config(yscrollcommand=kitaplar_scroll.set)
 
 sonuç_label = Label(root, text="")
 sonuç_label.grid(row=4, column=2, columnspan=3, padx=10, pady=10)
-
-#------------------------------------------------------------------------------------------------------#
 
 root.mainloop()
 
